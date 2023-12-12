@@ -15,12 +15,9 @@
 //! last digit in the word. These values must then be added together to create a
 //! single calculation value.
 
-use std::fs;
-
-use inquire::Text;
-
 use crate::utils::{
     infra::Problem,
+    io::prompt_for_file,
     str_manip::{extract_first_digit, extract_last_digit},
 };
 
@@ -32,11 +29,9 @@ impl Problem for Trebuchet {
     }
 
     fn run(&self) -> Result<(), ()> {
-        let path = Text::new("Path:").prompt().unwrap();
-        let words = fs::read_to_string(path).expect("File not found.");
         println!(
             "Result: {}",
-            words
+            prompt_for_file()
                 .split('\n')
                 .map(extract_number)
                 .into_iter()
