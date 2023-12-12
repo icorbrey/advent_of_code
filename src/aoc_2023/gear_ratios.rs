@@ -13,17 +13,18 @@ impl Problem for GearRatios {
 
     fn run(&self) -> Result<(), ()> {
         let globs = ingest_file(&prompt_for_file());
-        let symbols = globs.iter().filter_map(Glob::symbol);
-        let sum: u32 = globs
+
+        let numbers: Vec<Number> = globs.iter().filter_map(Glob::number).collect();
+        let symbols: Vec<Symbol> = globs.iter().filter_map(Glob::symbol).collect();
+
+        let sum: u32 = symbols
             .iter()
-            .filter_map(Glob::number)
-            .filter(|(_, n_bounds)| {
-                symbols
-                    .clone()
-                    .any(|s_bounds| s_bounds.is_adjacent_to(*n_bounds))
-            })
-            .map(|(x, _)| x)
+            .filter(|s| s.ch == '*')
+            .map(|s| numbers.iter().filter(|n| s.bounds.is_adjacent_to(n.bounds)))
+            .filter(|nums| nums.clone().count() == 2)
+            .map(|nums| nums.map(|n| n.value).product::<u32>())
             .sum();
+
         println!("{}", sum);
         Ok(())
     }
@@ -39,36 +40,66 @@ const MATCH_SYMBOL: &'static str = r"([\*\$\+\-\=\/\@\%\&\#])";
 fn ingest_line((y, line): (usize, &str)) -> Vec<Glob> {
     let mut globs = vec![];
     for c in Regex::new(MATCH_NUMBER).unwrap().find_iter(line) {
-        globs.push(Glob::Number((
+        globs.push(Glob::Number(Number::new(
             c.as_str().parse().unwrap(),
             BoundingBox::new(c.start(), y, c.len()),
         )));
     }
     for c in Regex::new(MATCH_SYMBOL).unwrap().find_iter(line) {
-        globs.push(Glob::Symbol(BoundingBox::new(c.start(), y, 1)));
+        globs.push(Glob::Symbol(Symbol::new(
+            c.as_str().chars().into_iter().next().unwrap(),
+            BoundingBox::new(c.start(), y, 1),
+        )));
     }
     globs
 }
 
 #[derive(Debug, PartialEq)]
 enum Glob {
-    Number((u32, BoundingBox)),
-    Symbol(BoundingBox),
+    Number(Number),
+    Symbol(Symbol),
 }
 
 impl Glob {
-    pub fn number(&self) -> Option<(u32, BoundingBox)> {
+    pub fn number(&self) -> Option<Number> {
         match self {
             Glob::Number(value) => Some(*value),
             _ => None,
         }
     }
 
-    pub fn symbol(&self) -> Option<BoundingBox> {
+    pub fn symbol(&self) -> Option<Symbol> {
         match self {
             Glob::Symbol(value) => Some(*value),
             _ => None,
         }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Number {
+    value: u32,
+    bounds: BoundingBox,
+}
+
+impl Number {
+    pub fn new(n: u32, bb: BoundingBox) -> Self {
+        Self {
+            value: n,
+            bounds: bb,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Symbol {
+    ch: char,
+    bounds: BoundingBox,
+}
+
+impl Symbol {
+    pub fn new(ch: char, bb: BoundingBox) -> Self {
+        Self { ch, bounds: bb }
     }
 }
 
@@ -99,11 +130,11 @@ mod tests {
     fn it_ingests_lines() {
         let y = 123;
         let globs = ingest_line((y, "123..*456.....789/"));
-        assert!(globs.contains(&Glob::Symbol(BoundingBox::new(5, y, 1))));
-        assert!(globs.contains(&Glob::Symbol(BoundingBox::new(17, y, 1))));
-        assert!(globs.contains(&Glob::Number((123, BoundingBox::new(0, y, 3)))));
-        assert!(globs.contains(&Glob::Number((456, BoundingBox::new(6, y, 3)))));
-        assert!(globs.contains(&Glob::Number((789, BoundingBox::new(14, y, 3)))));
+        assert!(globs.contains(&Glob::Symbol(Symbol::new('*', BoundingBox::new(5, y, 1)))));
+        assert!(globs.contains(&Glob::Symbol(Symbol::new('/', BoundingBox::new(17, y, 1)))));
+        assert!(globs.contains(&Glob::Number(Number::new(123, BoundingBox::new(0, y, 3)))));
+        assert!(globs.contains(&Glob::Number(Number::new(456, BoundingBox::new(6, y, 3)))));
+        assert!(globs.contains(&Glob::Number(Number::new(789, BoundingBox::new(14, y, 3)))));
     }
 
     #[test]
