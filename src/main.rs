@@ -1,16 +1,18 @@
-use inquire::Select;
+use utils::prelude::*;
 
 mod aoc_2023;
+mod aoc_2023_old;
 mod utils;
 
-fn main() -> Result<(), ()> {
-    let years = vec![aoc_2023::load()];
-
-    match Select::new("Year:", years.iter().map(|y| y.id).collect()).prompt() {
-        Ok(year) => match years.iter().find(|y| y.id == year) {
-            Some(year) => year.run(),
-            None => Err(()),
-        },
-        Err(_) => Err(()),
-    }
+fn main() {
+    AdventOfCode::new()
+        .add_year(
+            Year::new(2023)
+                .add_problem(aoc_2023::Trebuchet)
+                .add_problem(aoc_2023::CubeConundrum)
+                .add_problem(aoc_2023::GearRatios)
+                .add_problem(aoc_2023::Scratchcards)
+                .add_problem(aoc_2023::IfYouGiveASeedAFertilizer),
+        )
+        .run();
 }

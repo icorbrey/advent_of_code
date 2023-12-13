@@ -15,11 +15,7 @@
 //! last digit in the word. These values must then be added together to create a
 //! single calculation value.
 
-use crate::utils::{
-    infra::Problem,
-    io::prompt_for_file,
-    str_manip::{extract_first_digit, extract_last_digit},
-};
+use crate::utils::{infra::Problem, io::prompt_for_file, regex::StrRegexExtensions};
 
 pub struct Trebuchet;
 
@@ -43,7 +39,8 @@ impl Problem for Trebuchet {
 
 /// Extracts the two-digit number from the given string.
 fn extract_number(text: &str) -> u32 {
-    10 * extract_first_digit(text) + extract_last_digit(text)
+    let numbers = text.to_u32_vec().unwrap_or(vec![0]);
+    10 * numbers[0] + numbers[numbers.len() - 1]
 }
 
 #[cfg(test)]
