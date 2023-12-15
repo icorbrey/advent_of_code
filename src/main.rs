@@ -1,7 +1,6 @@
 use utils::prelude::*;
 
 mod aoc_2023;
-mod aoc_2023_old;
 mod utils;
 
 fn main() {
