@@ -23,16 +23,24 @@ impl Problem for IfYouGiveASeedAFertilizer {
     }
 
     fn part_2(&self, input: &str) {
-        let seeds = load_seed_pairs(input);
+        let seed_pairs = load_seed_pairs(input);
         let map_sets = load_map_sets(input);
 
-        let location = seeds
-            .iter()
-            .map(|seed| map_sets.iter().fold(*seed, |x, map_set| map_set.convert(x)))
-            .min()
-            .unwrap();
+        let mut location: Seed = Seed::MAX;
 
-        println!("Location: {}", location);
+        for (start, len) in seed_pairs {
+            println!("Seed pair: {}, {}", start, len);
+            'kek: for seed in start..(start + len) {
+                let value = map_sets.iter().fold(seed, |x, map_set| map_set.convert(x));
+                if value < location {
+                    println!("New min location: {}", value);
+                    location = value;
+                    break 'kek;
+                }
+            }
+        }
+
+        println!("\nLocation: {}", location);
     }
 }
 
@@ -58,7 +66,7 @@ fn load_seeds(input: &str) -> Vec<Seed> {
 
 const MATCH_U32_PAIR: &'static str = r"(\d+) (\d+)";
 
-fn load_seed_pairs(input: &str) -> Vec<Seed> {
+fn load_seed_pairs(input: &str) -> Vec<(Seed, Seed)> {
     let input = (Regex::new(MATCH_SEEDS).ok())
         .and_then(|re| re.captures(input))
         .and_then(|cap| cap.get(1))
@@ -71,9 +79,7 @@ fn load_seed_pairs(input: &str) -> Vec<Seed> {
                 .filter_map(|cap| {
                     (cap.get(1).and_then(|x| x.as_str().parse::<Seed>().ok()))
                         .zip(cap.get(2).and_then(|x| x.as_str().parse::<Seed>().ok()))
-                        .map(|(a, b)| (a..(a + b)).collect::<Vec<Seed>>())
                 })
-                .flatten()
                 .collect()
         })
         .unwrap_or(vec![])
