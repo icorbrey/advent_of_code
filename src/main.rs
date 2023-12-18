@@ -11,7 +11,8 @@ fn main() {
                 .add_problem(aoc_2023::CubeConundrum)
                 .add_problem(aoc_2023::GearRatios)
                 .add_problem(aoc_2023::Scratchcards)
-                .add_problem(aoc_2023::IfYouGiveASeedAFertilizer),
+                .add_problem(aoc_2023::IfYouGiveASeedAFertilizer)
+                .add_problem(aoc_2023::WaitForIt),
         )
         .run();
 }
